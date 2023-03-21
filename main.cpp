@@ -28,6 +28,11 @@ struct StructForSortCompare {
     u_long hash;
 };
 
+struct tm *timeTToDate(time_t date) {
+    struct tm *t = localtime(&date);
+    return t;
+}
+
 
 class Note {
     std::unordered_map<u_long, Event> eventData;
@@ -50,6 +55,19 @@ class Note {
 
 public:
 
+    void sort_ev() {
+        std::sort(idEvent.begin(), idEvent.end(), [](auto a, auto b) {
+            return a.t < b.t;
+        });
+
+    };
+
+    void sort_br() {
+        std::sort(idBirthday.begin(), idBirthday.end(), [](auto a, auto b) {
+            return a.t < b.t;
+        });
+    }
+
     u_int get_count_events() {
         return count;
     }
@@ -60,18 +78,18 @@ public:
     // Добавляем новый день рождения
     void add_birthday(Birthday &br);
 
-    void delete_event(u_long hash);
+    bool delete_event(u_long hash);
 
-    void delete_birthday(u_long hash);
 
     Event func_event();
 
     Birthday func_birthday();
 
-    void print_event(u_int hash);
+    void print_event();
 
-    void print_birthday(u_int hash);
+    void print_birthday();
 };
+
 
 void Note::add_event(Event &ev) {
 
@@ -101,6 +119,8 @@ void Note::add_birthday(Birthday &br) {
         strptime(ans.c_str(), "%dd/%mm/%yyyy", &date);
         auto t = dateToTimeT(&date);
         sfsc.t = t;
+        std::chrono::time_point now{std::chrono::system_clock::now()};
+        br.age = static_cast<int >(br.date.year());
         birthdayData[sfsc.hash] = std::move(br);
         count++;
     } else {
@@ -108,7 +128,7 @@ void Note::add_birthday(Birthday &br) {
     }
 }
 
-void Note::delete_event(u_long hash) {
+bool Note::delete_event(u_long hash) {
     if (!idEvent.empty()) {
         auto f = eventData.find(hash);
         std::cout << "Event id: " << &f->second.id << "Description: "
@@ -116,45 +136,44 @@ void Note::delete_event(u_long hash) {
         eventData.erase(hash);
         idEvent.pop_front();
         count--;
+        return true;
+    } else return false;
+}
+
+
+void Note::print_event() {
+    for (auto &i: idEvent) {
+        u_long hash = i.hash;
+        auto f = eventData.find(hash);
+
+        std::cout << "[ID: " << f->second.id << "]  "
+                  << "[Desc] " << f->second.description << '\n'
+                  << "[Created :" << f->second.created << "] - [expired: "
+                  << f->second.expires << "]\n\n";
     }
 }
 
-void Note::delete_birthday(u_long hash) {
-
-}
-
-void Note::print_event(u_int hash) {
-    auto f = eventData.find(hash);
-
-    std::cout << "[ID: " << f->second.id << "]  "
-              << "[Desc] " << f->second.description << '\n'
-              << "[Created :" << f->second.created << "] - [expired: "
-              << f->second.expires << "]\n\n";
-}
-
-void Note::print_birthday(u_int hash) {
-    auto f = birthdayData.find(hash);
-    std::string convertDate;
-    [&] { // convert Chronos time to string
+void Note::print_birthday() {
+    for (auto &it: idBirthday) {
+        u_long hash = it.hash;
+        auto f = birthdayData.find(hash);
+        std::string convertDate;
+        // convert Chronos time to string
 
         convertDate += std::to_string(static_cast<u_int>(f->second.date.day())) + ':';
         convertDate += std::to_string(static_cast<u_int>(f->second.date.month())) + ':';
         convertDate += std::to_string(static_cast<int>(f->second.date.year()));
 
-    };
-    std::cout << "[ID: " << f->second.id << "] " << "Birthday: " << convertDate << '\n'
-              << "FullName: " << f->second.full_name[0] << " " << f->second.full_name[1]
-              << " " << f->second.full_name[2] << '\n'
-              << "[Age]" << f->second.age << "\n\n";
+
+        std::cout << "[ID: " << f->second.id << "] " << "Birthday: " << convertDate << '\n'
+                  << "FullName: " << f->second.full_name[0] << " " << f->second.full_name[1]
+                  << " " << f->second.full_name[2] << '\n'
+                  << "[Age]" << f->second.age << "\n\n";
+    }
 }
 
 time_t dateToTimeT(struct tm *date) {
     time_t t = mktime(date);
-    return t;
-}
-
-struct tm *timeTToDate(time_t date) {
-    struct tm *t = localtime(&date);
     return t;
 }
 
@@ -192,7 +211,8 @@ Birthday Note::func_birthday() {
 int main() {
 
     Note note;
-    while (true) {
+    bool running = true;
+    while (running) {
         char input;
         std::cout << "Choose action (1 - Add event, 2 - Add birthday, 3 - List Events, 4 - List birthday 5 - Exit): ";
         std::cin >> input;
@@ -205,6 +225,20 @@ int main() {
             case 2: {
                 auto res_birth = note.func_birthday();
                 note.add_birthday(res_birth);
+                break;
+            }
+            case 3: {
+                note.sort_ev();
+                note.print_event();
+                break;
+            }
+            case 4: {
+                note.sort_br();
+                note.print_birthday();
+                break;
+            }
+            case 5: {
+                running = false;
                 break;
             }
 
