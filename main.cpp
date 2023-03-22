@@ -7,6 +7,7 @@
 #include <deque>
 #include <string>
 #include <time.h>
+#include <memory>
 
 struct Event {
     u_int id;
@@ -208,6 +209,42 @@ Birthday Note::func_birthday() {
 
 }
 
+
+class TimeIter {
+    std::chrono::seconds seconds;
+    std::chrono::minutes minutes;
+    std::chrono::hours hours;
+    std::chrono::day day;
+
+public:
+    TimeIter(TimeIter&&ti) {
+        seconds = std::move(ti.seconds);
+        minutes = std::move(ti.minutes);
+        hours = std::move(ti.hours);
+        day = std::move(ti.day);
+
+
+    }
+    void set_second(const std::chrono::seconds &s);
+
+    void set_minute(const std::chrono::minutes &m);
+
+    void set_hours(const std::chrono::hours);
+
+    void set_day(const std::chrono::day &day);
+
+    const std::chrono::seconds &getSeconds() const;
+
+    const std::chrono::minutes &getMinutes() const;
+
+    const std::chrono::hours &getHours() const;
+
+    const std::chrono::day &getDay() const;
+
+
+
+};
+
 int main() {
 
     Note note;
@@ -244,5 +281,11 @@ int main() {
 
 
         }
+    }
+    std::cout << "Level two\n";
+    // chronos for loop
+    std::chrono::seconds seconds;
+    for (auto i = 0; i < 100; i++) {
+
     }
 }
